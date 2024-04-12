@@ -2,40 +2,63 @@ name: Change Version
 
 on:
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, edited, reopened]
 
 jobs:
-  update_version:
-    if: github.event.pull_request.merged == true
+  testing:
     runs-on: ubuntu-latest
+    steps:
+      - name: 🧪 Run unit Testing
+        run: |
+          echo "testing starting"
+          sleep 30
+          echo "testing runned"
+  lint:
+    runs-on: ubuntu-latest
+    needs: []
+    steps:
+      - name: 💅 Run lint
+        run: |
+          echo "Lint starting"
+          sleep 20
+          echo "Lint runned"
+  pr_title_validate:
+    needs: [testing, lint]
+    if: ${{ needs.testing.result == 'success' && needs.lint.result == 'success'}}
     outputs:
       CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get install jp -y
-
-      - name: Determine version Change
+      - name: Validate PR title
         id: version_change
         run: |
           PR_TITLE=$(jq -r ".pull_request.title" "$GITHUB_EVENT_PATH")
 
-          if [[ $PR_TITLE == "feat:"* ]]; then            
+          if [[ $PR_TITLE == "feat:"* ]]; then
             CHANGE_VERSION_TYPE=minor
-          elif [[ $PR_TITLE == "fix:"* ]]; then
-            CHANGE_VERSION_TYPE=patch            
+          elif [[ $PR_TITLE == "patch:"* ]]; then
+            CHANGE_VERSION_TYPE=patch
           else
-            CHANGE_VERSION_TYPE=undefined            
+            echo '::error::PR title must begin with "feat:" or "fix:"'
+            exit 1
           fi
 
           echo "change_version_type=$CHANGE_VERSION_TYPE" >> "$GITHUB_OUTPUT"
           echo "Change version type: $CHANGE_VERSION_TYPE"
+  update_version:
+    needs: [pr_title_validate]
+    if: ${{ needs.pr_title_validate.result == 'success'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Update version.json
         env:
-          CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
+          CHANGE_VERSION_TYPE: ${{needs.pr_title_validate.outputs.CHANGE_VERSION_TYPE}}
           CURRENT_BRANCH: ${{github.event.pull_request.head.ref}}
         run: |
           CURRENT_VERSION=$(jq -r ".version" version.json)
@@ -49,8 +72,8 @@ jobs:
           fi
           echo "update type: $CHANGE_VERSION_TYPE - change version from $CURRENT_VERSION to $NEW_VERSION"
           jq --arg new_version "$NEW_VERSION" '.version=$new_version' version.json > version.tmp && mv version.tmp version.json
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update version"
-          commit_user_name: "github-actions[bot]"
-          commit_user_email: "github-actions[bot]@noreply.github.com"
+      # - uses: stefanzweifel/git-auto-commit-action@v5
+      #   with:
+      #     commit_message: "chore: update version"
+      #     commit_user_name: "github-actions[bot]"
+      # commit_user_email: "github-actions[bot]@noreply.github.com"
