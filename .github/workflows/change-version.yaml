@@ -51,4 +51,4 @@ jobs:
           git config --global user.name "Auto-update version actions"
           git add version.json
           git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
+          git push origin HEAD:refs/heads/${GITHUB_REF#refs/heads/}
