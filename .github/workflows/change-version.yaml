@@ -29,7 +29,7 @@ jobs:
             CHANGE_VERSION_TYPE=undefined            
           fi
 
-          echo $CHANGE_VERSION_TYPE >> "$GITHUB_OUTPUT"
+          echo "change_version_type=$CHANGE_VERSION_TYPE" >> "$GITHUB_OUTPUT"
           echo "Change version type: $CHANGE_VERSION_TYPE"
 
       - name: Update version.json
