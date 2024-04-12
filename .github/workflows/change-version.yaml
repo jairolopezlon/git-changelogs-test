@@ -25,13 +25,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get install jp -y
-
       - name: Validate PR title
         id: version_change
         run: |
-          PR_TITLE=$(jq -r "github.event.pull_request.title" "$GITHUB_EVENT_PATH")
+          PR_TITLE=$(jq -r ".pull_request.title" "$GITHUB_EVENT_PATH")
 
           if [[ $PR_TITLE == "feat:"* ]]; then
             CHANGE_VERSION_TYPE=minor
