@@ -32,7 +32,7 @@ jobs:
 
           if [[ $PR_TITLE == "feat:"* ]]; then
             CHANGE_VERSION_TYPE=minor
-          else [[ $PR_TITLE == "patch:"* ]]; then
+          elif [[ $PR_TITLE == "patch:"* ]]; then
             CHANGE_VERSION_TYPE=patch
           else
             echo 'PR title must begin with "feat:" or "fix:"'
