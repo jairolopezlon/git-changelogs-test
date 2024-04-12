@@ -28,5 +28,4 @@ jobs:
 
       - name: Update version.json
         run: |
-          CURRENT_VERSION=$(jp -r '.version' version.json)
           echo "update type: $(steps.version_change.outputs) - curren version: $CURRENT_VERSION"
