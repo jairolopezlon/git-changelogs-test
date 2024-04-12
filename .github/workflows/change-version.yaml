@@ -54,3 +54,4 @@ jobs:
           git add version.json
           git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
           git status
+          git push origin $CURRENT_BRANCH
