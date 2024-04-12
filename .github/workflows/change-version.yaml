@@ -2,11 +2,14 @@ name: Change Version
 
 on:
   pull_request:
-    types: [synchronize]
+    types: [closed]
 
 jobs:
   update_version:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    outputs:
+      CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,16 +20,37 @@ jobs:
       - name: Determine version Change
         id: version_change
         run: |
-          PR_TITLE=$(jp -r ".pull_request.title" "$GITHUB_EVENT_PATH")
-          if [[ $PR_TITLE == "feat:"* ]]; then
-            echo "change on version minor"
+          PR_TITLE=$(jq -r ".pull_request.title" "$GITHUB_EVENT_PATH")
+
+          if [[ $PR_TITLE == "feat:"* ]]; then            
+            CHANGE_VERSION_TYPE=minor
           elif [[ $PR_TITLE == "fix:"* ]]; then
-            echo "change on version patch"
+            CHANGE_VERSION_TYPE=patch            
           else
-            echo "version undefined"
+            CHANGE_VERSION_TYPE=undefined            
           fi
 
+          echo "change_version_type=$CHANGE_VERSION_TYPE" >> "$GITHUB_OUTPUT"
+          echo "Change version type: $CHANGE_VERSION_TYPE"
+
       - name: Update version.json
+        env:
+          CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
+          CURRENT_BRANCH: ${{github.event.pull_request.head.ref}}
         run: |
-          CURRENT_VERSION=$(jp -r '.version' version.json)
-          echo "update type: $(steps.version_change.outputs) - curren version: $CURRENT_VERSION"
+          CURRENT_VERSION=$(jq -r ".version" version.json)
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+          if [[ $CHANGE_VERSION_TYPE == "minor" ]]; then
+            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+          elif [[ $CHANGE_VERSION_TYPE == "patch" ]]; then
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          echo "update type: $CHANGE_VERSION_TYPE - change version from $CURRENT_VERSION to $NEW_VERSION"
+          jq --arg new_version "$NEW_VERSION" '.version=$new_version' version.json > version.tmp && mv version.tmp version.json
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update version"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@noreply.github.com"
