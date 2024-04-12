@@ -35,6 +35,7 @@ jobs:
       - name: Update version.json
         env:
           CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
+          CURRENT_BRANCH: ${{github.event.pull_request.head.ref}}
         run: |
           CURRENT_VERSION=$(jq -r ".version" version.json)
           MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
@@ -49,6 +50,8 @@ jobs:
           jq --arg new_version "$NEW_VERSION" '.version = $new_version' version.json > version.tmp && mv version.tmp version.json
           git config --global user.email "auto.version.actions@github.com"
           git config --global user.name "Auto-update version actions"
-          git add version.json
-          git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
-          git push
+          bra=git rev-parse --abbrev-ref HEAD
+          echo "current branch: $CURRENT_BRANCH - $bra"
+          # git add version.json
+          # git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
+          # git push
