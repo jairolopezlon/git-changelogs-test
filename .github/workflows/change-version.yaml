@@ -7,6 +7,8 @@ on:
 jobs:
   update_version:
     runs-on: ubuntu-latest
+    outputs:
+      CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,15 +21,15 @@ jobs:
         run: |
           PR_TITLE=$(jp -r ".pull_request.title" "$GITHUB_EVENT_PATH")
           if [[ $PR_TITLE == "feat:"* ]]; then
-            echo "change on version minor"
+            echo "change_version_type=minor" >> "$GITHUB_OUTPUT"
           elif [[ $PR_TITLE == "fix:"* ]]; then
-            echo "change on version patch"
+            echo "change_version_type=patch" >> "$GITHUB_OUTPUT"
           else
-            echo "version undefined"
+            echo "change_version_type=undefined" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Update version.json
         env:
-          CHANGE_VERSION_TYPE: ${{steps.version_change.outputs}}
+          CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
         run: |
           echo "update type: $CHANGE_VERSION_TYPE"
