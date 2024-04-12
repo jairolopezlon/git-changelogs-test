@@ -12,6 +12,7 @@ jobs:
         run: echo "testing runned"
   lint:
     runs-on: ubuntu-latest
+    needs: []
     steps:
       - name: 💅 Run lint
         run: echo "Lint runned"
