@@ -20,7 +20,6 @@ jobs:
         id: version_change
         run: |
           PR_TITLE=$(jq -r ".pull_request.title" "$GITHUB_EVENT_PATH")
-          echo "PR title: ${PR_TITLE}"
           if [[ $PR_TITLE == "feat:"* ]]; then
             echo "change_version_type=minor" >> "$GITHUB_OUTPUT"
           elif [[ $PR_TITLE == "fix:"* ]]; then
@@ -33,4 +32,13 @@ jobs:
         env:
           CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
         run: |
-          echo "update type: $CHANGE_VERSION_TYPE"
+          CURRENT_VERSION=$(jq -r ".version" version.json)
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+          if [[ $CHANGE_VERSION_TYPE == "minor" ]]; then
+            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+          elif [[ $CHANGE_VERSION_TYPE == "patch" ]]; then
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          echo "update type: $CHANGE_VERSION_TYPE - current version: $CURRENT_VERSION - new version: $NEW_VERSION"
