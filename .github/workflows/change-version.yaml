@@ -50,6 +50,7 @@ jobs:
           jq --arg new_version "$NEW_VERSION" '.version = $new_version' version.json > version.tmp && mv version.tmp version.json
           git config --global user.email "auto.version.actions@noreply.github.com"
           git config --global user.name "Auto-update version actions"
+          git checkout develop
           git add version.json
           git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
           git status
