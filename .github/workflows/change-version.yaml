@@ -48,8 +48,8 @@ jobs:
           fi
           echo "update type: $CHANGE_VERSION_TYPE - change version from $CURRENT_VERSION to $NEW_VERSION"
           jq --arg new_version "$NEW_VERSION" '.version = $new_version' version.json > version.tmp && mv version.tmp version.json
-          git config --global user.email "auto.version.actions@github.com"
+          git config --global user.email "auto.version.actions@noreply.github.com"
           git config --global user.name "Auto-update version actions"
           git add version.json
           git commit -m "chore: update version.json with $NEW_VERSION $CHANGE_VERSION_TYPE version"
-          git push origin $CURRENT_BRANCH
+          git status
