@@ -1,0 +1,32 @@
+name: Change Version
+
+on:
+  pull_request:
+    types: [synchronize]
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install jp -y
+
+      - name: Determine version Change
+        id: version_change
+        run: |
+          PR_TITLE=$(jp -r ".pull_request.title" "$GITHUB_EVENT_PATH")
+          if [[ $PR_TITLE == "feat:"* ]]; then
+            echo "change on version minor"
+          elif [[ $PR_TITLE == "fix:"* ]]; then
+            echo "change on version patch"
+          else
+            echo "version undefined"
+          fi
+
+      - name: Update version.json
+        run: |
+          CURRENT_VERSION=$(jp -r '.version' version.json)
+          echo "update type: $(steps.version_change.outputs) - curren version: $CURRENT_VERSION"
