@@ -20,13 +20,17 @@ jobs:
         id: version_change
         run: |
           PR_TITLE=$(jq -r ".pull_request.title" "$GITHUB_EVENT_PATH")
-          if [[ $PR_TITLE == "feat:"* ]]; then
-            echo "change_version_type=minor" >> "$GITHUB_OUTPUT"
+
+          if [[ $PR_TITLE == "feat:"* ]]; then            
+            CHANGE_VERSION_TYPE=minor
           elif [[ $PR_TITLE == "fix:"* ]]; then
-            echo "change_version_type=patch" >> "$GITHUB_OUTPUT"
+            CHANGE_VERSION_TYPE=patch            
           else
-            echo "change_version_type=undefined" >> "$GITHUB_OUTPUT"
+            CHANGE_VERSION_TYPE=undefined            
           fi
+
+          echo $CHANGE_VERSION_TYPE >> "$GITHUB_OUTPUT"
+          echo "Change version type: $CHANGE_VERSION_TYPE"
 
       - name: Update version.json
         env:
@@ -41,4 +45,5 @@ jobs:
           elif [[ $CHANGE_VERSION_TYPE == "patch" ]]; then
             NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           fi
-          echo "update type: $CHANGE_VERSION_TYPE - current version: $CURRENT_VERSION - new version: $NEW_VERSION"
+          echo "update type: $CHANGE_VERSION_TYPE - change version from $CURRENT_VERSION to $NEW_VERSION"
+          jq --arg new_version "$NEW_VERSION" '.version = $new_version' version.json > version.tmp && mv version.tmp version.json
