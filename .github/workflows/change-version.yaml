@@ -27,5 +27,7 @@ jobs:
           fi
 
       - name: Update version.json
+        env:
+          CHANGE_VERSION_TYPE: ${{steps.version_change.outputs}}
         run: |
-          echo "update type: $(steps.version_change.outputs) - curren version: $CURRENT_VERSION"
+          echo "update type: $CHANGE_VERSION_TYPE"
