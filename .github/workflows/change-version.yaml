@@ -2,10 +2,11 @@ name: Change Version
 
 on:
   pull_request:
-    types: [opened, synchronize, edited]
+    types: [closed]
 
 jobs:
   update_version:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       CHANGE_VERSION_TYPE: ${{steps.version_change.outputs.change_version_type}}
@@ -47,5 +48,9 @@ jobs:
             NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
           fi
           echo "update type: $CHANGE_VERSION_TYPE - change version from $CURRENT_VERSION to $NEW_VERSION"
-          jq --arg new_version "$NEW_VERSION" '.version = $new_version' version.json > version.tmp && mv version.tmp version.json
+          jq --arg new_version "$NEW_VERSION" '.version=$new_version' version.json > version.tmp && mv version.tmp version.json
       - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update version"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@noreply.github.com"
