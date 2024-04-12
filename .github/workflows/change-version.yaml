@@ -35,7 +35,7 @@ jobs:
           elif [[ $PR_TITLE == "patch:"* ]]; then
             CHANGE_VERSION_TYPE=patch
           else
-            echo 'PR title must begin with "feat:" or "fix:"'
+            echo '::error::PR title must begin with "feat:" or "fix:"'
             exit 1
           fi
 
